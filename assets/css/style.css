@@ -1,0 +1,15 @@
+body {
+    background-image: url(../../assets/images/11013402425_6792896fd6_b.jpg);
+}
+
+.card {
+    border-width:3px !important;
+}
+th {
+    font-weight: 700;
+}
+
+h1 {
+    font-family: 'Limelight', cursive;
+    text-shadow: 1px 2px 1px #ffc613;
+}
