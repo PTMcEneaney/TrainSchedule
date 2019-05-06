@@ -1,78 +1,96 @@
-$( document ).ready( function() {
+$(document).ready(function () {
     // Your web app's Firebase configuration
-var firebaseConfig = {
-    apiKey: "AIzaSyDdZODkoCeaRFptBbnBb63tKBxQzZILnZ8",
-    authDomain: "train-scheduler-346ff.firebaseapp.com",
-    databaseURL: "https://train-scheduler-346ff.firebaseio.com",
-    projectId: "train-scheduler-346ff",
-    storageBucket: "train-scheduler-346ff.appspot.com",
-    messagingSenderId: "433471485719",
-    appId: "1:433471485719:web:7c35fbb9cbb7eb5d"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
+    var firebaseConfig = {
+        apiKey: "AIzaSyDdZODkoCeaRFptBbnBb63tKBxQzZILnZ8",
+        authDomain: "train-scheduler-346ff.firebaseapp.com",
+        databaseURL: "https://train-scheduler-346ff.firebaseio.com",
+        projectId: "train-scheduler-346ff",
+        storageBucket: "train-scheduler-346ff.appspot.com",
+        messagingSenderId: "433471485719",
+        appId: "1:433471485719:web:7c35fbb9cbb7eb5d"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
-var database = firebase.database();
+    var database = firebase.database();
 
 
-$('#submitBtn').on("click", function () {
+    $('#submitBtn').on("click", function () {
 
-    var name = $('#name').val().trim();
-    var destination = $('#destination').val().trim();
-    var time = $('#time').val().trim();
-    var frequency = $('#frequency').val().trim();
+        var name = $('#name').val().trim();
+        var destination = $('#destination').val().trim();
+        var time = $('#time').val().trim();
+        var frequency = $('#frequency').val().trim();
 
-    database.ref().push({
-        name: name,
-        destination: destination,
-        time: time,
-        frequency: frequency,
-        dateAdded: firebase.database.ServerValue.TIMESTAMP,
+        database.ref().push({
+            name: name,
+            destination: destination,
+            time: time,
+            frequency: frequency,
+            dateAdded: firebase.database.ServerValue.TIMESTAMP,
+        });
+
     });
 
-});
+    $(document.body).on("click", '.close', function () {
+        console.log("click");
+        $(this).parent().parent().addClass("d-none");
+        //actually remove from database
 
+    });
 
+    database.ref().orderByChild("dateAdded").limitToLast(10).on("child_added", function (childSnapshot) {
 
-database.ref().orderByChild("dateAdded").limitToLast(10).on("child_added", function (childSnapshot) {
+        var sv = childSnapshot.val();
+        var name = sv.name;
+        var destination = sv.destination;
+        var time = sv.time;
+        var frequency = sv.frequency;
 
-    var sv = childSnapshot.val();
-    var name = sv.name;
-    var destination = sv.destination;
-    var time = sv.time;
-    var frequency = sv.frequency;
+        // First Time (pushed back 1 year to make sure it comes before current time)
+        var firstTimeConverted = moment(time, "HH:mm").subtract(1, "years");
+        // console.log(firstTimeConverted);
 
-    // First Time (pushed back 1 year to make sure it comes before current time)
-    var firstTimeConverted = moment(time, "HH:mm").subtract(1, "years");
-    // console.log(firstTimeConverted);
+        // Current Time
+        var currentTime = moment();
+        console.log("CURRENT TIME: " + moment(currentTime).format("HH:mm"));
 
-    // Current Time
-    var currentTime = moment();
-    console.log("CURRENT TIME: " + moment(currentTime).format("HH:mm"));
+        // Difference between the times
+        var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+        // console.log("DIFFERENCE IN TIME: " + diffTime);
 
-    // Difference between the times
-    var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
-    // console.log("DIFFERENCE IN TIME: " + diffTime);
+        // Time apart (remainder)
+        var tRemainder = diffTime % frequency;
+        // console.log(tRemainder);
 
-    // Time apart (remainder)
-    var tRemainder = diffTime % frequency;
-    // console.log(tRemainder);
+        // Minute Until Train
+        var tMinutesTillTrain = frequency - tRemainder;
+        console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
 
-    // Minute Until Train
-    var tMinutesTillTrain = frequency - tRemainder;
-    console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+        // Next Train
+        var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+        console.log("ARRIVAL TIME: " + moment(nextTrain).format("HH:mm"));
 
-    // Next Train
-    var nextTrain = moment().add(tMinutesTillTrain, "minutes");
-    console.log("ARRIVAL TIME: " + moment(nextTrain).format("HH:mm"));
+        var closeBtn = '<button type="button" class="close text-light float-left" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
 
+        var dataSet = ("<tr><td>" + closeBtn + "</td><td contenteditable='true'>" + name + "</td><td contenteditable='true'>" + destination + "</td><td contenteditable='true'>" +
+            frequency + "</td><td contenteditable='true'>" + moment(nextTrain).format("HH:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
 
-    var dataSet = ("<tr><td>" + name + "</td><td>" + destination + "</td><td>" +
-        frequency + "</td><td>" + moment(nextTrain).format("HH:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
+        $("#tbody").append(dataSet);
 
-    $("#tbody").append(dataSet);
-});
+    });
 
+    //'train-scheduler-346ff/'
+    /* database.ref().on("value", function (snapshot) {
+        var sv = snapshot.val();
+        database.ref().push({
+            name: sv.name,
+            destination: sv.destination,
+            time: sv.time,
+            frequency: sv.frequency,
+        });
+
+    }); */
 
 
 });
