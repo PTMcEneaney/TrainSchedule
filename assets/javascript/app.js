@@ -13,31 +13,34 @@ $(document).ready(function () {
     firebase.initializeApp(firebaseConfig);
 
     var database = firebase.database();
+    // var childName = database.ref().child();
 
-
-    $('#submitBtn').on("click", function () {
-
+    $('#submitBtn').on("click", function (event) {
         var name = $('#name').val().trim();
         var destination = $('#destination').val().trim();
         var time = $('#time').val().trim();
         var frequency = $('#frequency').val().trim();
+        if (name !== "" && destination !== "" && time ==! "" && frequency !== ""){
+            
 
-        database.ref().push({
-            name: name,
-            destination: destination,
-            time: time,
-            frequency: frequency,
-            dateAdded: firebase.database.ServerValue.TIMESTAMP,
-        });
+            database.ref().push({
+                "name": name,
+                "destination": destination,
+                "time": time,
+                "frequency": frequency,
+                "dateAdded": firebase.database.ServerValue.TIMESTAMP,
+            });
+        } else {
+            event.preventDefault();
+            alert("Please enter values in each field");
+        }
 
     });
 
     $(document.body).on("click", '.close', function () {
-        console.log("click");
         $(this).parent().parent().addClass("d-none");
-        //actually remove from database
-
     });
+
 
     database.ref().orderByChild("dateAdded").limitToLast(10).on("child_added", function (childSnapshot) {
 
@@ -49,48 +52,38 @@ $(document).ready(function () {
 
         // First Time (pushed back 1 year to make sure it comes before current time)
         var firstTimeConverted = moment(time, "HH:mm").subtract(1, "years");
-        // console.log(firstTimeConverted);
-
-        // Current Time
-        var currentTime = moment();
-        console.log("CURRENT TIME: " + moment(currentTime).format("HH:mm"));
 
         // Difference between the times
         var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
-        // console.log("DIFFERENCE IN TIME: " + diffTime);
 
         // Time apart (remainder)
         var tRemainder = diffTime % frequency;
-        // console.log(tRemainder);
 
         // Minute Until Train
         var tMinutesTillTrain = frequency - tRemainder;
-        console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
 
         // Next Train
         var nextTrain = moment().add(tMinutesTillTrain, "minutes");
-        console.log("ARRIVAL TIME: " + moment(nextTrain).format("HH:mm"));
 
         var closeBtn = '<button type="button" class="close text-light float-left" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
 
-        var dataSet = ("<tr><td>" + closeBtn + "</td><td contenteditable='true'>" + name + "</td><td contenteditable='true'>" + destination + "</td><td contenteditable='true'>" +
-            frequency + "</td><td contenteditable='true'>" + moment(nextTrain).format("HH:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
+        var dataSet = ("<tr><td>" + closeBtn +
+            "</td><td data='name'>" + name +
+            "</td><td data='destination'>" + destination +
+            "</td><td data='frequency'>" + frequency +
+            "</td><td data='time'>" + moment(nextTrain).format("hh:mm a") +
+            "</td><td>" + tMinutesTillTrain + "</td></tr>");
 
         $("#tbody").append(dataSet);
 
+        // contenteditable='true'
+
     });
 
-    //'train-scheduler-346ff/'
-    /* database.ref().on("value", function (snapshot) {
+    database.ref().on("child_added", function (snapshot) {
         var sv = snapshot.val();
-        database.ref().push({
-            name: sv.name,
-            destination: sv.destination,
-            time: sv.time,
-            frequency: sv.frequency,
-        });
+        console.log(sv);
 
-    }); */
-
+    });
 
 });
