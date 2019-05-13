@@ -1,12 +1,13 @@
 body {
     background-image: url(../../assets/images/11013402425_6792896fd6_b.jpg);
+    min-width: 600px;
 }
 
 .card {
     border-width:3px !important;
 }
 th {
-    font-weight: 700;
+    font-weight: 500;
 }
 
 h1 {
